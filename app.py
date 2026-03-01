@@ -6,7 +6,7 @@ import os
 # Menggunakan API Key yang Anda berikan
 API_KEY = "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI"
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-1.5-pro')
 
 # --- 2. SETTING HALAMAN ---
 st.set_page_config(page_title="Olen Studio Pro", layout="wide", page_icon="🦊")
@@ -125,4 +125,5 @@ if 'hasil_full' in st.session_state:
     feedback = st.feedback("stars")
     if feedback is not None:
         st.success(f"Rating {feedback+1} bintang berhasil dikirim! AI akan belajar dari sini.")
+
 
