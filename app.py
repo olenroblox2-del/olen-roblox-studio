@@ -2,7 +2,7 @@ import streamlit as st
 import google.generativeai as genai
 import os
 
-# --- KONFIGURASI API ---
+# --- 1. KONFIGURASI API ---
 try:
     API_KEY = st.secrets["GEMINI_API_KEY"]
 except:
@@ -10,53 +10,71 @@ except:
 
 genai.configure(api_key=API_KEY)
 
-# --- SISTEM MODEL CERDAS ---
-# Kode ini akan mencoba 3 nama model berbeda sampai berhasil
-def get_working_model():
-    for model_name in ['gemini-1.5-flash-latest', 'gemini-1.5-flash', 'gemini-pro']:
-        try:
-            m = genai.GenerativeModel(model_name)
-            # Tes apakah model ini merespon (hanya tes kecil)
-            return m
-        except:
-            continue
-    return None
+# Gunakan model paling stabil untuk Free Tier
+model = genai.GenerativeModel('gemini-1.5-flash-latest')
 
-model = get_working_model()
-
-# --- TAMPILAN DASHBOARD ---
+# --- 2. SETTING HALAMAN ---
 st.set_page_config(page_title="Olen Roblox Studio", layout="wide")
 
-st.title("🎬 Olen Roblox Animation Studio")
-st.write("Free Tier Mode - Production Hub for @olenroblox")
+# --- 3. TAMPILAN DASHBOARD (GAMBAR & JUDUL) ---
+col_img, col_tit = st.columns([1, 5])
+with col_img:
+    # Mencoba mencari file gambar dengan nama yang tepat
+    if os.path.exists("Charming Chibi in the Field-Photoroom.png"):
+        st.image("Charming Chibi in the Field-Photoroom.png", use_container_width=True)
+    else:
+        # Jika file tidak ditemukan, kita tampilkan teks pengganti agar tidak blank
+        st.warning("🖼️ Foto Avatar Belum Terbaca")
 
-# Menampilkan placeholder jika gambar tidak ditemukan
-if os.path.exists("Charming Chibi in the Field-Photoroom.png"):
-    st.image("Charming Chibi in the Field-Photoroom.png", width=150)
-else:
-    st.info("Avatar Olen")
+with col_tit:
+    st.title("🎬 Olen Roblox Animation Studio")
+    st.write("Production Center for **@olenroblox**")
 
 st.markdown("---")
 
-# --- INPUT AREA ---
+# --- 4. SIDEBAR (SEMUA MENU KEMBALI DI SINI) ---
 with st.sidebar:
-    st.header("⚙️ Pengaturan")
-    ide = st.text_area("Ide Cerita:", placeholder="Misal: Olen dikejar hantu...")
-    submit = st.button("🚀 MULAI GENERATE")
+    st.header("⚙️ Pengaturan Produksi")
+    
+    # Menampilkan kembali menu yang sempat hilang
+    tema = st.selectbox("Pilih Tema:", ["Horror Survival", "Comedy Skit", "Action Adventure", "Drama Roleplay"])
+    
+    pendamping = st.multiselect("Karakter Teman:", 
+                                ["Bacon Junior", "Spyder Sammy", "Rumi"], 
+                                default=["Bacon Junior"])
+    
+    jml_adegan = st.slider("Jumlah Adegan:", 3, 15, 5)
+    
+    st.markdown("---")
+    ide = st.text_area("Tulis Ide Cerita:", placeholder="Misal: Olen terjebak di basement sekolah...")
+    
+    submit = st.button("🚀 MULAI GENERATE", type="primary")
 
-# --- EKSEKUSI ---
+# --- 5. LOGIKA GENERASI ---
 if submit:
     if not ide:
-        st.error("Isi idenya dulu ya, Kak!")
-    elif model is None:
-        st.error("Google AI sedang sibuk. Tunggu sebentar lalu coba lagi.")
+        st.error("Silakan tulis ide ceritanya dulu ya, Kak!")
     else:
-        with st.spinner("🤖 AI sedang memproses naskah Olen..."):
+        with st.spinner("🤖 AI sedang merancang naskah..."):
             try:
                 # Instruksi detail visual Olen
-                prompt = f"Buat skrip Roblox untuk Olen (rambut oranye, kacamata putih, celana kodok). Ide: {ide}"
+                prompt = f"""
+                Buat storyboard Roblox detail. 
+                Karakter Utama: Olen (rambut oranye, kacamata putih, baju belang, celana kodok).
+                Teman: {', '.join(pendamping)}. Tema: {tema}. Adegan: {jml_adegan}.
+                Ide: {ide}.
+                Output: Pisahkan dengan '---' untuk: 1. Script, 2. Image Prompt, 3. Motion Prompt.
+                """
+                
                 response = model.generate_content(prompt)
-                st.success("✅ BERHASIL!")
-                st.write(response.text)
+                hasil = response.text
+                bagian = hasil.split('---')
+
+                # Menampilkan hasil dalam Tab agar rapi
+                t1, t2, t3 = st.tabs(["📝 Script", "🎨 Image Prompt", "🎥 Motion Prompt"])
+                with t1: st.write(bagian[0] if len(bagian) > 0 else hasil)
+                with t2: st.code(bagian[1] if len(bagian) > 1 else "N/A")
+                with t3: st.code(bagian[2] if len(bagian) > 2 else "N/A")
+                
             except Exception as e:
-                st.error(f"Teknis Error: {str(e)}")
+                st.error(f"Terjadi kendala: {str(e)}")
