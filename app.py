@@ -13,8 +13,7 @@ except:
 genai.configure(api_key=API_KEY)
 
 # --- 2. PILIH MODEL STABIL ---
-# Kita gunakan 'gemini-1.5-flash' karena paling jarang error 'NotFound'
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-pro')
 
 # --- 3. TAMPILAN DASHBOARD ---
 st.set_page_config(page_title="Olen Roblox Studio", layout="wide", page_icon="🦊")
@@ -89,3 +88,4 @@ if submit:
             except Exception as e:
                 st.error(f"Terjadi kesalahan: {str(e)}")
                 st.info("Coba cek apakah API Key di 'Secrets' sudah benar.")
+
