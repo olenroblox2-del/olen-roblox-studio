@@ -3,28 +3,26 @@ import google.generativeai as genai
 import os
 
 # --- 1. KONFIGURASI API ---
-try:
-    API_KEY = st.secrets["GEMINI_API_KEY"]
-except:
-    API_KEY = "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI"
+# Gunakan st.secrets untuk deployment, atau input manual untuk lokal
+api_key = st.secrets.get("GEMINI_API_KEY", "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI")
 
-genai.configure(api_key=API_KEY)
+if not api_key or api_key == "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI":
+    st.error("🔑 API Key belum dikonfigurasi!")
+    st.stop()
 
-# Gunakan model paling stabil untuk Free Tier
-model = genai.GenerativeModel('gemini-1.5-flash-latest')
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # --- 2. SETTING HALAMAN ---
 st.set_page_config(page_title="Olen Roblox Studio", layout="wide")
 
-# --- 3. TAMPILAN DASHBOARD (GAMBAR & JUDUL) ---
+# --- 3. UI DASHBOARD ---
 col_img, col_tit = st.columns([1, 5])
 with col_img:
-    # Mencoba mencari file gambar dengan nama yang tepat
     if os.path.exists("image_0.png"):
         st.image("image_0.png", use_container_width=True)
     else:
-        # Jika file tidak ditemukan, kita tampilkan teks pengganti agar tidak blank
-        st.warning("🖼️ Foto Avatar Belum Terbaca")
+        st.info("🖼️ Olen Avatar")
 
 with col_tit:
     st.title("🎬 Olen Roblox Animation Studio")
@@ -32,50 +30,53 @@ with col_tit:
 
 st.markdown("---")
 
-# --- 4. SIDEBAR (SEMUA MENU KEMBALI DI SINI) ---
+# --- 4. SIDEBAR ---
 with st.sidebar:
     st.header("⚙️ Pengaturan Produksi")
-    
-    # Menampilkan kembali menu yang sempat hilang
     tema = st.selectbox("Pilih Tema:", ["Horror Survival", "Comedy Skit", "Action Adventure", "Drama Roleplay"])
-    
-    pendamping = st.multiselect("Karakter Teman:", 
-                                ["Bacon Junior", "Spyder Sammy", "Rumi"], 
-                                default=["Bacon Junior"])
-    
+    pendamping = st.multiselect("Karakter Teman:", ["Bacon Junior", "Spyder Sammy", "Rumi"], default=["Bacon Junior"])
     jml_adegan = st.slider("Jumlah Adegan:", 3, 15, 5)
-    
     st.markdown("---")
     ide = st.text_area("Tulis Ide Cerita:", placeholder="Misal: Olen terjebak di basement sekolah...")
-    
     submit = st.button("🚀 MULAI GENERATE", type="primary")
 
-# --- 5. LOGIKA GENERASI ---
+# --- 5. LOGIKA GENERASI & STATE ---
+# Inisialisasi session state agar data tidak hilang saat pindah tab
+if "hasil_ai" not in st.session_state:
+    st.session_state.hasil_ai = None
+
 if submit:
     if not ide:
         st.error("Silakan tulis ide ceritanya dulu ya, Kak!")
     else:
         with st.spinner("🤖 AI sedang merancang naskah..."):
             try:
-                # Instruksi detail visual Olen
                 prompt = f"""
                 Buat storyboard Roblox detail. 
                 Karakter Utama: Olen (rambut oranye, kacamata putih, baju belang, celana kodok).
                 Teman: {', '.join(pendamping)}. Tema: {tema}. Adegan: {jml_adegan}.
                 Ide: {ide}.
-                Output: Pisahkan dengan '---' untuk: 1. Script, 2. Image Prompt, 3. Motion Prompt.
+                Output: Pisahkan dengan tanda '---' untuk: 
+                1. Script Cerita, 
+                2. Image Prompt (AI Image Gen), 
+                3. Motion Prompt (Video AI).
                 """
                 
                 response = model.generate_content(prompt)
-                hasil = response.text
-                bagian = hasil.split('---')
-
-                # Menampilkan hasil dalam Tab agar rapi
-                t1, t2, t3 = st.tabs(["📝 Script", "🎨 Image Prompt", "🎥 Motion Prompt"])
-                with t1: st.write(bagian[0] if len(bagian) > 0 else hasil)
-                with t2: st.code(bagian[1] if len(bagian) > 1 else "N/A")
-                with t3: st.code(bagian[2] if len(bagian) > 2 else "N/A")
-                
+                # Simpan ke session state
+                st.session_state.hasil_ai = response.text
             except Exception as e:
-                st.error(f"Terjadi kendala: {str(e)}")
+                st.error(f"Terjadi kendala API: {str(e)}")
 
+# --- 6. MENAMPILKAN HASIL ---
+if st.session_state.hasil_ai:
+    bagian = st.session_state.hasil_ai.split('---')
+    
+    t1, t2, t3 = st.tabs(["📝 Script", "🎨 Image Prompt", "🎥 Motion Prompt"])
+    
+    with t1:
+        st.markdown(bagian[0] if len(bagian) > 0 else st.session_state.hasil_ai)
+    with t2:
+        st.code(bagian[1].strip() if len(bagian) > 1 else "Prompt gambar tidak tersedia")
+    with t3:
+        st.code(bagian[2].strip() if len(bagian) > 2 else "Prompt gerakan tidak tersedia")
