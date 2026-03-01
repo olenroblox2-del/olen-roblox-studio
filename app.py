@@ -1,8 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 
-# GANTI TEKS DI BAWAH INI DENGAN API KEY ANDA
-MY_API_KEY = "MASUKKAN_API_KEY_ANDA_DI_SINI"
+# Ganti baris API_KEY lama dengan ini:
+API_KEY = st.secrets["GEMINI_API_KEY"]
 
 genai.configure(api_key=MY_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
@@ -33,4 +33,5 @@ if tombol:
             st.write(response.text)
         with tab3:
             st.info("Gunakan ini di Luma/Runway")
+
             st.write(response.text)
