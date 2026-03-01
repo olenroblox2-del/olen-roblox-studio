@@ -3,11 +3,13 @@ import google.generativeai as genai
 import os
 
 # --- 1. KONFIGURASI API ---
-# Gunakan st.secrets untuk deployment, atau input manual untuk lokal
+# Mengambil API Key dari st.secrets (untuk online) atau manual (untuk lokal)
+# Pastikan API Key Kak Olen 'AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI' sudah benar
 api_key = st.secrets.get("GEMINI_API_KEY", "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI")
 
-if not api_key or api_key == "AIzaSyB06UXMFuJB0uEevvPVDVtAgdm_qyRAtDI":
-    st.error("🔑 API Key belum dikonfigurasi!")
+# PERBAIKAN: Logika diubah agar hanya error jika api_key benar-benar kosong
+if not api_key:
+    st.error("🔑 API Key tidak ditemukan! Masukkan API Key di Secrets atau di dalam kode.")
     st.stop()
 
 genai.configure(api_key=api_key)
@@ -19,8 +21,11 @@ st.set_page_config(page_title="Olen Roblox Studio", layout="wide")
 # --- 3. UI DASHBOARD ---
 col_img, col_tit = st.columns([1, 5])
 with col_img:
+    # Menggunakan nama file gambar yang Kak Olen miliki
     if os.path.exists("image_0.png"):
         st.image("image_0.png", use_container_width=True)
+    elif os.path.exists("Charming Chibi in the Field-Photoroom.png"):
+        st.image("Charming Chibi in the Field-Photoroom.png", use_container_width=True)
     else:
         st.info("🖼️ Olen Avatar")
 
@@ -41,7 +46,6 @@ with st.sidebar:
     submit = st.button("🚀 MULAI GENERATE", type="primary")
 
 # --- 5. LOGIKA GENERASI & STATE ---
-# Inisialisasi session state agar data tidak hilang saat pindah tab
 if "hasil_ai" not in st.session_state:
     st.session_state.hasil_ai = None
 
@@ -51,6 +55,7 @@ if submit:
     else:
         with st.spinner("🤖 AI sedang merancang naskah..."):
             try:
+                # Instruksi khusus untuk karakter Olen
                 prompt = f"""
                 Buat storyboard Roblox detail. 
                 Karakter Utama: Olen (rambut oranye, kacamata putih, baju belang, celana kodok).
@@ -63,13 +68,13 @@ if submit:
                 """
                 
                 response = model.generate_content(prompt)
-                # Simpan ke session state
                 st.session_state.hasil_ai = response.text
             except Exception as e:
                 st.error(f"Terjadi kendala API: {str(e)}")
 
 # --- 6. MENAMPILKAN HASIL ---
 if st.session_state.hasil_ai:
+    # Memastikan bagian dipisahkan dengan benar
     bagian = st.session_state.hasil_ai.split('---')
     
     t1, t2, t3 = st.tabs(["📝 Script", "🎨 Image Prompt", "🎥 Motion Prompt"])
