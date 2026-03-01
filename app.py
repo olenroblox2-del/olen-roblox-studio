@@ -20,8 +20,8 @@ st.set_page_config(page_title="Olen Roblox Studio", layout="wide")
 col_img, col_tit = st.columns([1, 5])
 with col_img:
     # Mencoba mencari file gambar dengan nama yang tepat
-    if os.path.exists("Charming Chibi in the Field-Photoroom.png"):
-        st.image("Charming Chibi in the Field-Photoroom.png", use_container_width=True)
+    if os.path.exists("image_0.png"):
+        st.image("image_0.png", use_container_width=True)
     else:
         # Jika file tidak ditemukan, kita tampilkan teks pengganti agar tidak blank
         st.warning("🖼️ Foto Avatar Belum Terbaca")
@@ -78,3 +78,4 @@ if submit:
                 
             except Exception as e:
                 st.error(f"Terjadi kendala: {str(e)}")
+
